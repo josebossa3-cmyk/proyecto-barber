@@ -13,8 +13,8 @@ const SERVICIOS = {
 const HORA_INICIO = 9
 const HORA_FIN = 21
 
-const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbza6SUu5DQOwfmqEgG_BvtSa8dE0LymJsTDV5xdMbT5T1vJOZuEfAlzFrrTkWJyFuei/exec"
+// Ahora utilizamos nuestro backend PHP + MySQL en /api/
+const WEB_APP_URL = '/api/book.php'
 
 // Funciones para manejar modales
 function mostrarModalCarga() {
@@ -290,21 +290,16 @@ function mostrarReservasConfirmadas() {
 
 async function enviarReservaAGoogleSheets(turnoData) {
   try {
-    console.log("[v0] Enviando turno a Google Sheets:", turnoData)
-
-    const response = await fetch(WEB_APP_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(turnoData),
+    // ahora POST al endpoint PHP que inserta en MySQL
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(turnoData)
     })
-
-    console.log("[v0] Turno enviado a Google Sheets (modo no-cors)")
-    return true
-  } catch (error) {
-    console.error("[v0] Error al enviar a Google Sheets:", error)
+    const json = await res.json()
+    return json.success === true
+  } catch(err){
+    console.error('[v0] Error al enviar a backend:', err)
     return false
   }
 }
