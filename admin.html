@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Panel Administrativo - Turnos</title>
+    <link rel="stylesheet" href="../proyecto-barber/style.css" />
+    <style>
+      /* Small overrides to adapt admin layout to the main theme */
+      body {
+        padding: 28px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .searchBox {
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--accent-blue);
+        background: rgba(15, 20, 25, 0.7);
+        color: var(--text-primary);
+      }
+      .ghost {
+        background: transparent;
+        border: 1px solid var(--accent-blue);
+        color: var(--text-primary);
+        padding: 10px;
+        border-radius: 8px;
+      }
+      .small {
+        font-size: 12px;
+      }
+      main {
+        max-width: none;
+        margin: 0 auto;
+        width: calc(100% - 56px);
+      }
+      .footer-note {
+        color: var(--text-secondary);
+        margin-top: 16px;
+      }
+      /* Use existing reservas table styles */
+      .admin-table-wrap {
+        margin-top: 14px;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .reservas-tabla tbody td {
+        padding: 18px 20px;
+      }
+      .reservas-tabla thead th {
+        padding: 16px 20px;
+      }
+      .actions button {
+        margin-right: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="logo">
+        <h1>ADMIN PANEL</h1>
+        <p class="tagline">Turnos & Reservas</p>
+      </div>
+      <div style="margin-left: 16px">
+        <div class="note">
+          Lista todos los turnos almacenados en el servidor (MySQL via API).
+        </div>
+      </div>
+      <div class="controls">
+        <input
+          id="searchInput"
+          class="searchBox"
+          placeholder="Buscar por nombre, apellido o email"
+        />
+        <button id="exportBtn">Exportar CSV</button>
+        <button id="logoutBtn" class="ghost">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Formulario administrativo: agregar turno manualmente (colocado arriba según solicitud) -->
+      <section
+        style="
+          margin-bottom: 18px;
+          background: rgba(15, 20, 25, 0.6);
+          padding: 14px;
+          border-radius: 10px;
+          border: 1px solid var(--accent-blue);
+        "
+      >
+        <h3 style="color: var(--accent-copper); margin: 0 0 10px">
+          Agregar Turno Manual
+        </h3>
+        <form
+          id="adminAddForm"
+          style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            align-items: end;
+          "
+        >
+          <div>
+            <label class="resumen-label">Nombre</label>
+            <input
+              id="adm_nombre"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid var(--accent-blue);
+                background: rgba(15, 20, 25, 0.6);
+                color: var(--text-primary);
+              "
+            />
+          </div>
+          <div>
+            <label class="resumen-label">Apellido</label>
+            <input
+              id="adm_apellido"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid var(--accent-blue);
+                background: rgba(15, 20, 25, 0.6);
+                color: var(--text-primary);
+              "
+            />
+          </div>
+          <div>
+            <label class="resumen-label">E-mail</label>
+            <input
+              id="adm_email"
+              type="email"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid var(--accent-blue);
+                background: rgba(15, 20, 25, 0.6);
+                color: var(--text-primary);
+              "
+            />
+          </div>
+          <div>
+            <label class="resumen-label">Servicio</label>
+            <select
+              id="adm_servicio"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid var(--accent-blue);
+                background: rgba(15, 20, 25, 0.6);
+                color: var(--text-primary);
+              "
+            >
+              <option value="">Selecciona</option>
+              <option value="corte">Corte (30 min)</option>
+              <option value="corte-barba">Corte + Barba (90 min)</option>
+              <option value="corte-color">Corte + Color (120 min)</option>
+            </select>
+          </div>
+          <div>
+            <label class="resumen-label">Barbero</label>
+            <select
+              id="adm_barbero"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid var(--accent-blue);
+                background: rgba(15, 20, 25, 0.6);
+                color: var(--text-primary);
+              "
+            >
+              <option value="">Selecciona</option>
+              <option value="carlos">Carlos</option>
+              <option value="juan">Juan</option>
+              <option value="diego">Diego</option>
+            </select>
+          </div>
+          <div>
+            <label class="resumen-label">Fecha</label>
+            <input
+              id="adm_fecha"
+              type="date"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid var(--accent-blue);
+                background: rgba(15, 20, 25, 0.6);
+                color: var(--text-primary);
+              "
+            />
+          </div>
+          <div>
+            <label class="resumen-label">Horario</label>
+            <select
+              id="adm_horario"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid var(--accent-blue);
+                background: rgba(15, 20, 25, 0.6);
+                color: var(--text-primary);
+              "
+            >
+              <option value="">Selecciona fecha y servicio</option>
+            </select>
+          </div>
+          <div>
+            <label class="resumen-label">Pago</label>
+            <select
+              id="adm_pago"
+              required
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid var(--accent-blue);
+                background: rgba(15, 20, 25, 0.6);
+                color: var(--text-primary);
+              "
+            >
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+            </select>
+          </div>
+          <div
+            style="
+              grid-column: 1 / -1;
+              display: flex;
+              gap: 8px;
+              justify-content: flex-end;
+            "
+          >
+            <button id="adm_add_btn" class="btn-export" type="submit">
+              Agregar Turno
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <div class="reservas-tabla-scroll admin-table-wrap">
+        <table id="turnosTable" class="reservas-tabla" aria-live="polite">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Horario</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>E-mail</th>
+              <th>Servicio</th>
+              <th>Duración</th>
+              <th>Barbero</th>
+              <th>Pago</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="turnosBody">
+            <tr class="empty">
+              <td colspan="10">Cargando...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer-note">
+        Nota: para que esta página vea las reservas creadas desde la app
+        principal, abre ambas páginas desde el mismo origen (por ejemplo
+        sirviendo la carpeta con un servidor local). Si abres archivos con
+        distinto origen, <code>localStorage</code> puede ser distinto.
+      </div>
+    </main>
+
+    <script>
+      // API base (desde la carpeta `barber admin` hacia `api`)
+      const API_BASE = "../api";
+
+      async function obtenerReservas() {
+        try {
+          const res = await fetch(API_BASE + "/get_reservations.php", {
+            method: "GET",
+            credentials: "include",
+          });
+          if (!res.ok) return {};
+          const data = await res.json();
+          return data && data.reservas ? data.reservas : {};
+        } catch (err) {
+          console.error("Error obteniendo reservas desde API:", err);
+          return {};
+        }
+      }
+
+      // Servicios (misma config que en la app principal)
+      const SERVICIOS = {
+        corte: { nombre: "Corte", duracion: 0.5 },
+        "corte-barba": { nombre: "Corte + Barba", duracion: 1.5 },
+        "corte-color": { nombre: "Corte + Color", duracion: 2 },
+      };
+      const HORA_INICIO = 9;
+      const HORA_FIN = 21;
+
+      function generarHorariosAdmin(duracionMinutos) {
+        const horarios = [];
+        const inicioMin = HORA_INICIO * 60;
+        const finMin = HORA_FIN * 60;
+        for (let t = inicioMin; t + duracionMinutos <= finMin; t += 30) {
+          const hh = Math.floor(t / 60);
+          const mm = t % 60;
+          horarios.push(
+            `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`
+          );
+        }
+        return horarios;
+      }
+
+      function formatFechaDDMMYY(isoFecha) {
+        if (!isoFecha) return "";
+        const parts = isoFecha.split("-");
+        if (parts.length < 3) return isoFecha;
+        const yyyy = parts[0],
+          mm = parts[1],
+          dd = parts[2];
+        return `${dd}-${mm}-${yyyy.slice(-2)}`;
+      }
+
+      function convertirALista(reservasObj) {
+        const lista = [];
+        Object.keys(reservasObj).forEach((fechaIso) => {
+          const dia = reservasObj[fechaIso];
+          Object.keys(dia).forEach((horario) => {
+            const item = dia[horario];
+            lista.push(Object.assign({ fecha_iso: fechaIso, horario }, item));
+          });
+        });
+        // ordenar por fecha_iso + horario (descendente: más reciente primero)
+        lista.sort((a, b) => {
+          if (a.fecha_iso === b.fecha_iso)
+            return b.horario.localeCompare(a.horario);
+          return b.fecha_iso.localeCompare(a.fecha_iso);
+        });
+        return lista;
+      }
+
+      async function renderTabla(filterText = "") {
+        const tbody = document.getElementById("turnosBody");
+        const reservas = await obtenerReservas();
+        const lista = convertirALista(reservas);
+        const filtro = filterText.trim().toLowerCase();
+        const filtrada = filtro
+          ? lista.filter((r) => {
+              return (
+                (r.nombre || "").toLowerCase().includes(filtro) ||
+                (r.apellido || "").toLowerCase().includes(filtro) ||
+                (r.email || "").toLowerCase().includes(filtro) ||
+                (r.servicio || "").toLowerCase().includes(filtro)
+              );
+            })
+          : lista;
+
+        if (filtrada.length === 0) {
+          tbody.innerHTML =
+            '<tr class="empty"><td colspan="10">No hay turnos registrados.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = "";
+        filtrada.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.fecha || r.fecha_iso}</td>
+            <td>${r.horario || ""}</td>
+            <td>${escapeHtml(r.nombre || "")}</td>
+            <td>${escapeHtml(r.apellido || "")}</td>
+            <td>${escapeHtml(r.email || "")}</td>
+            <td>${escapeHtml(r.servicio || "")}</td>
+            <td>${r.duracionMinutos ? r.duracionMinutos + "m" : ""}</td>
+            <td>${escapeHtml(r.nombreBarbero || r.barbero || "")}</td>
+            <td>${escapeHtml(r.pago || "")}</td>
+            <td class="actions">
+              <button class="btn-export small" onclick="editarReserva('${
+                r.fecha_iso
+              }','${r.horario}')">Editar</button>
+              <button class="btn-cancelar small" onclick="eliminarReserva('${
+                r.fecha_iso
+              }','${r.horario}')">Eliminar</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>\"'`]/g, function (m) {
+          return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+            "`": "&#96;",
+          }[m];
+        });
+      }
+
+      async function eliminarReserva(fechaIso, horario) {
+        if (!confirm("Eliminar turno " + fechaIso + " " + horario + "?"))
+          return;
+        try {
+          const res = await fetch(API_BASE + "/delete_reservation.php", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fecha_iso: fechaIso, horario }),
+          });
+          const j = await res.json();
+          if (!res.ok || !j.success) {
+            alert(j.message || "Error eliminando reserva");
+            return;
+          }
+          await renderTabla(document.getElementById("searchInput").value);
+        } catch (err) {
+          console.error("Error eliminando reserva:", err);
+          alert("Error eliminando reserva");
+        }
+      }
+
+      function vaciarTodo() {
+        if (
+          !confirm(
+            "Vaciar todas las reservas? Esta acción no se puede deshacer."
+          )
+        )
+          return;
+        localStorage.removeItem(STORAGE_KEY);
+        renderTabla();
+      }
+
+      function exportarCSV() {
+        const reservas = convertirALista(obtenerReservas());
+        if (reservas.length === 0) {
+          alert("No hay datos para exportar");
+          return;
+        }
+        const encabezados = [
+          "fecha",
+          "fecha_iso",
+          "horario",
+          "nombre",
+          "apellido",
+          "email",
+          "servicio",
+          "duracionMinutos",
+          "barbero",
+          "nombreBarbero",
+          "pago",
+        ];
+        const rows = reservas.map((r) =>
+          encabezados
+            .map(
+              (h) =>
+                '"' +
+                (r[h] !== undefined && r[h] !== null
+                  ? String(r[h]).replace(/"/g, '""')
+                  : "") +
+                '"'
+            )
+            .join(",")
+        );
+        const csv = [encabezados.join(","), ...rows].join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download =
+          "turnos_export_" +
+          new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-") +
+          ".csv";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // Nota: la sincronización con Google Sheets fue retirada.
+
+      // --- Autenticación con servidor PHP ---
+      async function requireAuth() {
+        try {
+          const res = await fetch(API_BASE + "/check_session.php", {
+            method: "GET",
+            credentials: "include",
+          });
+          if (!res.ok) {
+            window.location.href = "login.html";
+            return false;
+          }
+          const j = await res.json();
+          if (!j.logged) {
+            window.location.href = "login.html";
+            return false;
+          }
+          return true;
+        } catch (err) {
+          console.error("Error verificando sesión:", err);
+          window.location.href = "login.html";
+          return false;
+        }
+      }
+
+      async function logout() {
+        try {
+          await fetch(API_BASE + "/logout.php", {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch (err) {
+          console.error("Error en logout:", err);
+        }
+        window.location.href = "../proyecto-barber/index.html";
+      }
+
+      // listeners
+      document.addEventListener("DOMContentLoaded", async () => {
+        await requireAuth();
+        await renderTabla();
+        document
+          .getElementById("exportBtn")
+          .addEventListener("click", async () => await exportarCSV());
+        document
+          .getElementById("searchInput")
+          .addEventListener("input", async (e) => {
+            await renderTabla(e.target.value);
+          });
+        document.getElementById("logoutBtn").addEventListener("click", logout);
+      });
+
+      // Exponer función para botones inline
+      window.eliminarReserva = eliminarReserva;
+      window.editarReserva = editarReserva;
+
+      // --- Funciones para agregar y editar turnos ---
+      function estaLibre(
+        reservas,
+        fechaIso,
+        horario,
+        duracionMinutos,
+        barbero,
+        ignoreHorario = null
+      ) {
+        const dia = reservas[fechaIso] || {};
+        const candidatoParts = horario.split(":").map(Number);
+        const candidatoStart = candidatoParts[0] * 60 + candidatoParts[1];
+        const candidatoEnd = candidatoStart + duracionMinutos;
+        for (const h in dia) {
+          if (h === ignoreHorario) continue;
+          const r = dia[h];
+          if (!r) continue;
+          if (r.barbero !== barbero) continue;
+          const parts = h.split(":").map(Number);
+          const start = parts[0] * 60 + parts[1];
+          const end = start + (r.duracionMinutos || 60);
+          if (candidatoStart < end && start < candidatoEnd) return false;
+        }
+        return true;
+      }
+
+      // Manejar formulario de agregar turno
+      document.addEventListener("DOMContentLoaded", () => {
+        const admServicio = document.getElementById("adm_servicio");
+        const admFecha = document.getElementById("adm_fecha");
+        const admBarbero = document.getElementById("adm_barbero");
+        const admHorario = document.getElementById("adm_horario");
+
+        async function actualizarHorariosDisponibles() {
+          admHorario.innerHTML = '<option value="">Cargando...</option>';
+          const serv = admServicio.value;
+          const fecha = admFecha.value;
+          const barbero = admBarbero.value;
+          if (!serv || !fecha || !barbero) {
+            admHorario.innerHTML =
+              '<option value="">Selecciona fecha, servicio y barbero</option>';
+            return;
+          }
+          const durMin = Math.round(SERVICIOS[serv].duracion * 60);
+          const posibles = generarHorariosAdmin(durMin);
+          const reservas = obtenerReservas();
+          const lista = posibles.filter((h) =>
+            estaLibre(reservas, fecha, h, durMin, barbero)
+          );
+          if (lista.length === 0) {
+            admHorario.innerHTML =
+              '<option value="">No hay horarios libres</option>';
+            return;
+          }
+          admHorario.innerHTML =
+            '<option value="">Selecciona</option>' +
+            lista.map((h) => `<option value="${h}">${h}</option>`).join("");
+        }
+
+        // Establecer fecha por defecto y rango: desde hoy en adelante (hasta +30 días)
+        const hoy = new Date();
+        const hoyIso = hoy.toISOString().split("T")[0];
+        const maxFecha = new Date(hoy);
+        maxFecha.setDate(maxFecha.getDate() + 30);
+        const maxIso = maxFecha.toISOString().split("T")[0];
+        admFecha.min = hoyIso;
+        admFecha.max = maxIso;
+        if (!admFecha.value) admFecha.value = hoyIso;
+
+        admServicio.addEventListener("change", actualizarHorariosDisponibles);
+        admFecha.addEventListener("change", actualizarHorariosDisponibles);
+        admBarbero.addEventListener("change", actualizarHorariosDisponibles);
+
+        document
+          .getElementById("adminAddForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById("adm_nombre").value.trim();
+            const apellido = document
+              .getElementById("adm_apellido")
+              .value.trim();
+            const email = document.getElementById("adm_email").value.trim();
+            const servicio = admServicio.value;
+            const barbero = admBarbero.value;
+            const fecha = admFecha.value;
+            const horario = admHorario.value;
+            const pago = document.getElementById("adm_pago").value;
+            if (
+              !nombre ||
+              !apellido ||
+              !email ||
+              !servicio ||
+              !barbero ||
+              !fecha ||
+              !horario ||
+              !pago
+            ) {
+              alert("Completa todos los campos");
+              return;
+            }
+            const durMin = Math.round(SERVICIOS[servicio].duracion * 60);
+            const reservas = obtenerReservas();
+            if (!estaLibre(reservas, fecha, horario, durMin, barbero)) {
+              alert("El horario seleccionado ya está ocupado");
+              return;
+            }
+            // preparar objeto de turno
+            const timestamp = new Date().toISOString();
+            const turnoData = {
+              nombre,
+              apellido,
+              email,
+              barbero,
+              nombreBarbero:
+                document.getElementById("adm_barbero").selectedOptions[0].text,
+              servicio: SERVICIOS[servicio].nombre,
+              duracionMinutos: durMin,
+              fecha: formatFechaDDMMYY(fecha),
+              fecha_iso: fecha,
+              horario,
+              pago,
+              timestamp,
+            };
+
+            // intentar enviar a Google Sheets (no bloquear si falla)
+            const enviado = await enviarReservaAGoogleSheets(turnoData);
+
+            if (!reservas[fecha]) reservas[fecha] = {};
+            reservas[fecha][horario] = Object.assign({}, turnoData, {
+              enviado: !!enviado,
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(reservas));
+            renderTabla();
+            alert(
+              "Turno creado correctamente" +
+                (enviado
+                  ? " y enviado a Google Sheets."
+                  : " (no fue posible enviar a Google Sheets)")
+            );
+            document.getElementById("adminAddForm").reset();
+            admHorario.innerHTML =
+              '<option value="">Selecciona fecha y servicio</option>';
+          });
+      });
+
+      // Editar reserva: permite cambiar a un horario libre (puede cambiar fecha)
+      function editarReserva(fechaIso, horario) {
+        const reservas = obtenerReservas();
+        const dia = reservas[fechaIso];
+        if (!dia || !dia[horario]) {
+          alert("Reserva no encontrada");
+          return;
+        }
+        const r = dia[horario];
+        const servicioKey =
+          Object.keys(SERVICIOS).find(
+            (k) => SERVICIOS[k].nombre === r.servicio
+          ) || "corte";
+        const fechaNueva = prompt("Nueva fecha (YYYY-MM-DD):", fechaIso);
+        if (fechaNueva === null) return;
+        const durMin =
+          r.duracionMinutos ||
+          Math.round((SERVICIOS[servicioKey].duracion || 1) * 60);
+        const posibles = generarHorariosAdmin(durMin);
+        const reservasObj = obtenerReservas();
+        // filtrar slots libres para esa fecha y barbero (permitir que el slot original sea reasignado)
+        const libres = posibles.filter((h) =>
+          estaLibre(
+            reservasObj,
+            fechaNueva,
+            h,
+            durMin,
+            r.barbero,
+            fechaNueva === fechaIso ? horario : null
+          )
+        );
+        if (libres.length === 0) {
+          alert("No hay horarios libres en esa fecha para ese barbero");
+          return;
+        }
+        const listaTexto = libres.join(", ");
+        const elegido = prompt(
+          "Horarios libres:\n" +
+            listaTexto +
+            "\n\nEscribe el horario exacto que quieras (ej: 09:00):"
+        );
+        if (elegido === null) return;
+        if (!libres.includes(elegido)) {
+          alert("Horario inválido o no disponible");
+          return;
+        }
+        // mover reserva
+        delete reservas[fechaIso][horario];
+        if (Object.keys(reservas[fechaIso]).length === 0)
+          delete reservas[fechaIso];
+        if (!reservas[fechaNueva]) reservas[fechaNueva] = {};
+        reservas[fechaNueva][elegido] = Object.assign({}, r, {
+          fecha_iso: fechaNueva,
+          fecha: formatFechaDDMMYY(fechaNueva),
+          horario: elegido,
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(reservas));
+        renderTabla();
+        alert("Reserva actualizada");
+      }
+    </script>
+  </body>
+</html>
