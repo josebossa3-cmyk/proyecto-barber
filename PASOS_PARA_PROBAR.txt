@@ -1,0 +1,239 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   📋 PASOS PARA PROBAR EL LOGIN                             ║
+║                         (LEER PASO A PASO)                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+PASO 0: LIMPIAR EL PROYECTO (Optional but Recommended)
+─────────────────────────────────────────────────────
+
+Abre PowerShell y ejecuta (en la carpeta del proyecto):
+
+  cd "e:\xampp\htdocs\prueba conexion php"
+  
+  # Eliminar archivos viejos
+  Remove-Item -Force admin.php, dashboard.php, agregar.php, editar.php, eliminar.php
+  Remove-Item -Force README.md, RESUMEN_AUDITORIA.txt, test_reserva.php, test_admin_panel.php
+  
+  # Eliminar carpetas vacías
+  Remove-Item -Recurse -Force public, sql, tests, core
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 1: VERIFICAR QUE MYSQL ESTÁ CORRIENDO
+──────────────────────────────────────────
+
+• Abre "XAMPP Control Panel" (busca en Inicio de Windows)
+• Haz click en botón "Start" en la fila de MySQL
+• Espera 2-3 segundos hasta que diga "Running"
+• También haz click en "Start" para Apache
+
+Si aparece error, abre PowerShell como Administrador y ejecuta:
+
+  e:\xampp\mysql\bin\mysql.exe -u root -e "SELECT 1;"
+
+Si ves "1", MySQL está OK. Si error, reinicia XAMPP.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 2: VERIFICAR QUE LA BD EXISTE
+──────────────────────────────────
+
+Abre PowerShell y ejecuta:
+
+  Get-Content "e:\xampp\htdocs\prueba conexion php\conexion_base.sql" | `
+  e:\xampp\mysql\bin\mysql.exe -u root barberia
+
+Deberías ver líneas de código sin errores (o error de tabla ya existe - es OK).
+
+Luego ejecuta:
+
+  Get-Content "e:\xampp\htdocs\prueba conexion php\upgrade_turnos.sql" | `
+  e:\xampp\mysql\bin\mysql.exe -u root barberia
+
+Si todo OK, continúa.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 3: EJECUTAR EL TEST DE LOGIN
+─────────────────────────────────
+
+Abre PowerShell en la carpeta del proyecto:
+
+  cd "e:\xampp\htdocs\prueba conexion php"
+
+Ejecuta:
+
+  &"e:\xampp\php\php.exe" "e:\xampp\htdocs\prueba conexion php\test_login.php"
+
+Deberías ver esto:
+
+  ╔════════════════════════════════════════════════════════════════╗
+  ║             TEST DE LOGIN - SISTEMA DE RESERVAS                ║
+  ╚════════════════════════════════════════════════════════════════╝
+
+  [1/4] Verificando conexión a la base de datos...
+  ✓ Conexión exitosa
+  ...
+  [4/4] Verificando tabla turnos...
+  ✓ Tabla turnos existe con 10 columnas
+
+  ╔════════════════════════════════════════════════════════════════╗
+  ║                      TESTS COMPLETADOS                         ║
+  ╚════════════════════════════════════════════════════════════════╝
+
+Si ves "✓" en todos, puedes continuar. Si ves "✗", revisa el error.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 4: PROBAR EL LOGIN EN EL NAVEGADOR
+───────────────────────────────────────
+
+Abre tu navegador (Chrome, Firefox, Edge) y ve a:
+
+  http://localhost/prueba%20conexion%20php/login.php
+
+Verás una pantalla de login con:
+  - Campo "Usuario"
+  - Campo "Contraseña"
+  - Botón "Iniciar sesión"
+  - Nota que dice "admin / admin123"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 5: INICIAR SESIÓN
+──────────────────────
+
+En el formulario, escribe:
+  
+  Usuario: admin
+  Contraseña: admin123
+
+Haz click en "Iniciar sesión".
+
+RESULTADOS POSIBLES:
+
+✅ TODO OK:
+   Te redirige a: http://localhost/prueba%20conexion%20php/admin/dashboard.php
+   Ves una tabla con turnos (vacía o con datos)
+   En la esquina superior derecha ves "admin" y botón "Cerrar Sesión"
+
+❌ ERROR 404 - "Not Found":
+   
+   SOLUCIÓN:
+   1. Verifica que Apache está corriendo (XAMPP Panel → Start)
+   2. Abre la consola del navegador (F12 → Consola)
+   3. Busca el mensaje de error rojo
+   4. Verifica que la ruta es correcta en la barra de direcciones
+   5. Si sigue fallando, abre PowerShell y ejecuta test_login.php de nuevo
+      para ver dónde está el problema
+
+❌ ERROR "Credenciales incorrectas":
+   
+   SOLUCIÓN:
+   1. Verifica que escribiste bien: admin / admin123
+   2. Abre PowerShell y verifica que admin existe en BD:
+      
+      e:\xampp\mysql\bin\mysql.exe -u root barberia -e "SELECT * FROM administradores;"
+      
+   3. Deberías ver una fila con usuario "admin"
+   4. Si no existe, inserta:
+      
+      e:\xampp\mysql\bin\mysql.exe -u root barberia -e "INSERT INTO administradores (usuario, clave) VALUES ('admin', 'admin123');"
+
+❌ ERROR "Error de conexión a la base de datos":
+   
+   SOLUCIÓN:
+   1. Abre XAMPP Control Panel
+   2. Haz click en "Start" en MySQL
+   3. Espera 3 segundos
+   4. Actualiza la página del navegador (F5)
+   5. Si sigue fallando, ejecuta:
+      
+      &"e:\xampp\php\php.exe" "e:\xampp\htdocs\prueba conexion php\test_login.php"
+      
+      para ver el error detallado
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 6: PROBAR EL PANEL ADMINISTRATIVO
+──────────────────────────────────────
+
+Una vez dentro (login exitoso), verás:
+
+  🏪 Panel Administrativo - Turnos
+
+Con:
+  • Estadísticas (Total, Hoy, Efectivo)
+  • Botón "+ Agregar Turno"
+  • Tabla con columnas: ID, Fecha, Hora, Cliente, Email, Servicio, Barbero, Pago, Duración, Acciones
+
+Prueba:
+  1. Haz click en "+ Agregar Turno"
+  2. Llena el formulario con datos de prueba
+  3. Haz click en "Guardar Turno"
+  4. Verás el turno en la tabla
+  5. Haz click en "Editar" para modificarlo
+  6. Haz click en "Eliminar" para borrarlo
+
+Si todo funciona, el sistema está 100% OK.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 7: PROBAR EL LOGOUT
+───────────────────────
+
+En el panel administrativo, haz click en el botón rojo "Cerrar Sesión"
+(esquina superior derecha).
+
+Deberías ser redirigido a login.php con un mensaje de éxito.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 8: PROBAR LA PÁGINA PÚBLICA (Reservas)
+───────────────────────────────────────────
+
+Abre:
+
+  http://localhost/prueba%20conexion%20php/index.php
+
+Verás:
+  • Página principal con servicios y carrusel
+  • Formulario de reserva con campos:
+    - Nombre, Apellido, Email
+    - Servicio (dropdown)
+    - Fecha (date picker)
+    - Barbero (dropdown)
+    - Horarios disponibles
+    - Método de pago
+
+Prueba:
+  1. Llena todos los campos
+  2. Selecciona un servicio
+  3. Selecciona una fecha
+  4. Selecciona un horario disponible
+  5. Haz click en "Confirmar Reserva"
+  6. Verás una modal de confirmación
+  7. Cierra la modal
+  8. Abre el panel administrativo (login) y verás la reserva en la tabla
+
+Si todo funciona, el sistema está 100% LISTO.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RESUMEN FINAL
+─────────────
+
+Si llegaste hasta aquí y todo funcionó:
+
+✅ Login: FUNCIONA
+✅ Panel Admin: FUNCIONA
+✅ Reservas: FUNCIONA
+✅ Logout: FUNCIONA
+✅ BD: FUNCIONA
+✅ Seguridad: IMPLEMENTADA
+
+El proyecto está 100% LISTO PARA USAR.
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         ¡FELICIDADES! 🎉                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝

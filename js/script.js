@@ -1,5 +1,3 @@
-
-
 // Sistema de Gestión de Turnos - Bunker Barber
 
 // Configuración de servicios y duración (en horas exactas)
@@ -13,8 +11,8 @@ const SERVICIOS = {
 const HORA_INICIO = 9
 const HORA_FIN = 21
 
-// Ahora utilizamos nuestro backend PHP + MySQL en /api/
-const WEB_APP_URL = '/api/book.php'
+// Endpoint backend para procesar reservas (alineado con el form HTML)
+const WEB_APP_URL = 'procesar_reserva.php'
 
 // Funciones para manejar modales
 function mostrarModalCarga() {
@@ -215,7 +213,11 @@ function renderizarHorarios() {
         e.preventDefault()
         document.querySelectorAll(".horario-btn").forEach((b) => b.classList.remove("selected"))
         btn.classList.add("selected")
-        document.getElementById("horariosContainer").dataset.horariosSeleccionados = horario
+        const cont = document.getElementById("horariosContainer")
+        cont.dataset.horariosSeleccionados = horario
+        // Rellenar input oculto #hora para compatibilidad con envío por formulario
+        const horaInput = document.getElementById("hora")
+        if (horaInput) horaInput.value = horario
         actualizarResumen()
       })
     }
