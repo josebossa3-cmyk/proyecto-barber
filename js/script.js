@@ -12,7 +12,9 @@ const HORA_INICIO = 9
 const HORA_FIN = 21
 
 // Endpoint backend para procesar reservas (alineado con el form HTML)
-const WEB_APP_URL = 'procesar_reserva.php'
+// Detectar si estamos en admin o en raíz
+const WEB_APP_URL = window.location.pathname.includes('/admin/') ? '../procesar_reserva.php' : 'procesar_reserva.php'
+const CONSULTAR_TURNOS_URL = window.location.pathname.includes('/admin/') ? '../consultar_turnos.php' : 'consultar_turnos.php'
 
 // Funciones para manejar modales
 function mostrarModalCarga() {
@@ -23,7 +25,7 @@ function ocultarModalCarga() {
   document.getElementById("loadingModal").classList.add("hidden")
 }
 
-function mostrarModalConfirm(nombre, apellido, servicio, nombreBarbero, fecha, horario, email) {
+function mostrarModalConfirm(nombre, apellido, servicio, nombreBarbero, fecha, horario, telefono) {
   const confirmDetails = document.getElementById("confirmDetails")
   confirmDetails.innerHTML = `
     <p><strong>Nombre:</strong> ${nombre} ${apellido}</p>
@@ -31,7 +33,7 @@ function mostrarModalConfirm(nombre, apellido, servicio, nombreBarbero, fecha, h
     <p><strong>Barbero:</strong> ${nombreBarbero}</p>
     <p><strong>Fecha:</strong> ${fecha}</p>
     <p><strong>Horario:</strong> ${horario}</p>
-    <p><strong>Email:</strong> ${email}</p>
+    <p><strong>Teléfono:</strong> ${telefono}</p>
   `
   document.getElementById("confirmModal").classList.remove("hidden")
 }
@@ -97,24 +99,15 @@ function formatFechaDDMMYY(isoFecha) {
   return `${dd}-${mm}-${yy}`
 }
 
-// Obtener el rango de 3 días permitidos
-function obtenerFechasPermitidas() {
-  const hoy = new Date()
-  const fechas = []
-
-  for (let i = 0; i < 3; i++) {
-    const fecha = new Date(hoy)
-    fecha.setDate(hoy.getDate() + i)
-    fechas.push(fecha.toISOString().split("T")[0])
-  }
-
-  return fechas
-}
-
-// Validar fecha
+// Validar fecha: permite desde hoy hasta 2 días después
 function validarFecha(fecha) {
-  const fechasPermitidas = obtenerFechasPermitidas()
-  return fechasPermitidas.includes(fecha)
+  if (!fecha) return false
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  const max = new Date(hoy)
+  max.setDate(hoy.getDate() + 2)
+  const fechaObj = new Date(fecha + 'T00:00:00')
+  return fechaObj >= hoy && fechaObj <= max
 }
 
 // Obtener el nombre del día
@@ -124,20 +117,21 @@ function obtenerNombreDia(fecha) {
   return dias[d.getDay()]
 }
 
-// Configurar el input de fecha con restricción de 3 días
+// Configurar el input de fecha: desde hoy hasta 2 días después
 function configurarInputFecha() {
   const inputFecha = document.getElementById("fecha")
-  const hoy = new Date().toISOString().split("T")[0]
-  const maxFecha = new Date()
-  maxFecha.setDate(maxFecha.getDate() + 2)
-  const maxFechaStr = maxFecha.toISOString().split("T")[0]
+  const hoy = new Date()
+  const minStr = hoy.toISOString().split("T")[0]
+  const max = new Date(hoy)
+  max.setDate(hoy.getDate() + 2)
+  const maxStr = max.toISOString().split("T")[0]
 
-  inputFecha.min = hoy
-  inputFecha.max = maxFechaStr
+  inputFecha.min = minStr
+  inputFecha.max = maxStr
 }
 
-// Renderizar horarios disponibles
-function renderizarHorarios() {
+// Renderizar horarios disponibles (ahora consulta al servidor para turnos reales)
+async function renderizarHorarios() {
   const servicio = document.getElementById("servicio").value
   const fecha = document.getElementById("fecha").value
   const barbero = document.getElementById("barbero").value
@@ -154,7 +148,7 @@ function renderizarHorarios() {
   }
 
   if (!validarFecha(fecha)) {
-    contenedor.innerHTML = '<p class="placeholder-text">Fecha no disponible. Máximo 3 días desde hoy.</p>'
+    contenedor.innerHTML = '<p class="placeholder-text">Fecha no disponible. Solo puedes reservar desde hoy hasta 2 días después.</p>'
     return
   }
 
@@ -163,31 +157,111 @@ function renderizarHorarios() {
   const reservas = obtenerReservas()
   const reservasDelDia = reservas[fecha] || {}
 
-  // Preparar intervalos ocupados para este barbero
+  // Preparar intervalos ocupados para este barbero (combinando servidor + localStorage)
   const reservasIntervalos = []
   const servicioNamesToKey = {}
   for (const key in SERVICIOS) {
     servicioNamesToKey[SERVICIOS[key].nombre] = key
   }
 
-  Object.keys(reservasDelDia).forEach((startStr) => {
-    const reserva = reservasDelDia[startStr]
-    // Solo considerar reservas del mismo barbero
-    if (reserva && reserva.barbero === barbero) {
-      const [hh, mm] = startStr.split(":").map(Number)
-      const startMin = hh * 60 + mm
-      let durMin = null
-      if (reserva && reserva.duracionMinutos) {
-        durMin = reserva.duracionMinutos
-      } else if (reserva && reserva.servicio) {
-        const key = servicioNamesToKey[reserva.servicio]
-        durMin = key ? Math.round(SERVICIOS[key].duracion * 60) : 60
+  // 1) Consultar turnos reales al servidor
+  let serverChecked = false
+  try {
+    const url = `${CONSULTAR_TURNOS_URL}?fecha_iso=${encodeURIComponent(fecha)}&barbero=${encodeURIComponent(barbero)}`
+    const resp = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } })
+    if (resp.ok) {
+      const json = await resp.json()
+      if (json && json.success && Array.isArray(json.turnos)) {
+        serverChecked = true
+        // Sincronizar localStorage con la respuesta del servidor para evitar
+        // que datos obsoletos en el navegador sigan bloqueando horarios.
+        try {
+          const reservas = obtenerReservas()
+          // Inicializar estructura para la fecha
+          reservas[fecha] = reservas[fecha] || {}
+
+          // Si el servidor dice que no hay turnos, limpiar la fecha local
+          if (json.turnos.length === 0) {
+            if (reservas[fecha]) {
+              delete reservas[fecha]
+            }
+          } else {
+            // Mapear cada turno del servidor a la estructura local
+            json.turnos.forEach(t => {
+              const horaStr = (t.hora || '').substr(0,5)
+              const dur = Number.isFinite(t.duracionMinutos) && t.duracionMinutos > 0 ? parseInt(t.duracionMinutos, 10) : 60
+              // Encontrar servicio por duración (mejor aproximación)
+              let servicioName = ''
+              for (const k in SERVICIOS) {
+                if (Math.round(SERVICIOS[k].duracion * 60) === dur) {
+                  servicioName = SERVICIOS[k].nombre
+                  break
+                }
+              }
+              if (!servicioName) servicioName = 'Servicio'
+
+              reservas[fecha][horaStr] = {
+                nombre: 'Reservado',
+                apellido: '',
+                telefono: '',
+                barbero: barbero,
+                nombreBarbero: barbero.charAt(0).toUpperCase() + barbero.slice(1),
+                servicio: servicioName,
+                duracionMinutos: dur,
+                fecha: formatFechaDDMMYY(fecha),
+                fecha_iso: fecha,
+                pago: '',
+                timestamp: new Date().toISOString(),
+                enviado: true
+              }
+
+              const parts = horaStr.split(":").map(Number)
+              const startMin = parts[0] * 60 + parts[1]
+              reservasIntervalos.push({ start: startMin, end: startMin + dur })
+            })
+          }
+
+          guardarReservas(reservas)
+        } catch (e) {
+          console.warn('[renderizarHorarios] No se pudo sincronizar localStorage con servidor:', e)
+          // fallback: si falla la sincronización, aún añadimos los intervalos al array
+          json.turnos.forEach(t => {
+            const parts = (t.hora || '').split(":").map(Number)
+            const startMin = parts[0] * 60 + parts[1]
+            const dur = Number.isFinite(t.duracionMinutos) && t.duracionMinutos > 0 ? parseInt(t.duracionMinutos, 10) : 60
+            reservasIntervalos.push({ start: startMin, end: startMin + dur })
+          })
+        }
       } else {
-        durMin = 60
+        // servidor respondió pero sin lista válida -> marcar que fue consultado
+        serverChecked = true
       }
-      reservasIntervalos.push({ start: startMin, end: startMin + durMin })
     }
-  })
+  } catch (err) {
+    console.warn('[renderizarHorarios] Error al consultar turnos al servidor', err)
+    // continuar usando solo localStorage si falla la consulta
+  }
+
+  // 2) Añadir reservas locales (solo si no hubo respuesta válida del servidor para evitar bloqueos obsoletos)
+  if (!serverChecked) {
+    Object.keys(reservasDelDia).forEach((startStr) => {
+      const reserva = reservasDelDia[startStr]
+      if (reserva && reserva.barbero === barbero) {
+        const [hh, mm] = startStr.split(":").map(Number)
+        const startMin = hh * 60 + mm
+        let durMin = null
+        if (reserva && reserva.duracionMinutos) {
+          durMin = reserva.duracionMinutos
+        } else if (reserva && reserva.servicio) {
+          const key = servicioNamesToKey[reserva.servicio]
+          durMin = key ? Math.round(SERVICIOS[key].duracion * 60) : 60
+        } else {
+          durMin = 60
+        }
+        reservasIntervalos.push({ start: startMin, end: startMin + durMin })
+      }
+    })
+  }
 
   contenedor.innerHTML = ""
 
@@ -274,9 +348,6 @@ function actualizarResumen() {
   }
 }
 
-// Verificar si un turno puede ser cancelado
-// Nota: la funcionalidad de cancelación de turnos fue removida por limpieza.
-
 // Mostrar las reservas confirmadas
 function mostrarReservasConfirmadas() {
   const contenedor = document.getElementById("reservasInfo")
@@ -284,15 +355,14 @@ function mostrarReservasConfirmadas() {
     <div class="reservas-titulo">
       ✅ Sistema de Reservas Activo
       <p style="color: #a8a8a8; font-size: 14px; margin-top: 8px; font-weight: 400;">
-        Las reservas confirmadas se envían directamente a Google Sheets y recibirás confirmación por email.
+        Las reservas confirmadas se registran en el sistema y recibirás confirmación.
       </p>
     </div>
   `
 }
 
-async function enviarReservaAGoogleSheets(turnoData) {
+async function enviarReserva(turnoData) {
   try {
-    // ahora POST al endpoint PHP que inserta en MySQL
     const res = await fetch(WEB_APP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -301,7 +371,6 @@ async function enviarReservaAGoogleSheets(turnoData) {
     const json = await res.json()
     return json.success === true
   } catch(err){
-    console.error('[v0] Error al enviar a backend:', err)
     return false
   }
 }
@@ -316,6 +385,27 @@ function inicializarEventListeners() {
   const carouselItems = document.getElementById("carouselItems")
   const prevBtn = document.getElementById("prevBtn")
   const nextBtn = document.getElementById("nextBtn")
+
+  // Handler para botones de barbero
+  const barberoButtons = document.querySelectorAll(".barbero-btn")
+  if (barberoButtons.length > 0) {
+    barberoButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        // Remover active de todos
+        barberoButtons.forEach(b => b.classList.remove("active"))
+        // Activar el clickeado
+        btn.classList.add("active")
+        // Actualizar input hidden
+        const barberoValue = btn.getAttribute("data-barbero")
+        if (barberoSelect) {
+          barberoSelect.value = barberoValue
+          // Trigger change event
+          const event = new Event("change")
+          barberoSelect.dispatchEvent(event)
+        }
+      })
+    })
+  }
 
   if (servicioSelect) {
     servicioSelect.addEventListener("change", () => {
@@ -348,7 +438,7 @@ function inicializarEventListeners() {
 
       const nombre = document.getElementById("nombre").value
       const apellido = document.getElementById("apellido").value
-      const email = document.getElementById("email").value
+      const telefono = document.getElementById("telefono").value
       const barbero = document.getElementById("barbero").value
       const servicio = document.getElementById("servicio").value
       const fecha = document.getElementById("fecha").value
@@ -357,24 +447,29 @@ function inicializarEventListeners() {
       const horario = document.getElementById("horariosContainer").dataset.horariosSeleccionados
       const pago = document.getElementById("pago").value
 
-      if (!nombre || !apellido || !email || !barbero || !servicio || !fecha || !horario || !pago) {
+      if (!nombre || !apellido || !telefono || !barbero || !servicio || !fecha || !horario || !pago) {
         mostrarToast("Por favor completa todos los campos", "error")
         return
       }
 
       mostrarModalCarga()
 
-      const selectBarbero = document.getElementById("barbero")
-      const nombreBarbero = selectBarbero.options[selectBarbero.selectedIndex].text
+      // Obtener nombre del barbero (capitalizado)
+      const nombreBarbero = barbero.charAt(0).toUpperCase() + barbero.slice(1)
+
+      const durMinutos = Math.round(SERVICIOS[servicio].duracion * 60)
+      // rellenar input oculto de duración para compatibilidad con envío tradicional
+      const durInput = document.getElementById('duracionMinutos')
+      if (durInput) durInput.value = durMinutos
 
       const turnoData = {
         nombre,
         apellido,
-        email,
+        telefono,
         barbero,
         nombreBarbero,
         servicio: SERVICIOS[servicio].nombre,
-        duracionMinutos: Math.round(SERVICIOS[servicio].duracion * 60),
+        duracionMinutos: durMinutos,
         // Fecha enviada a la DB en formato dd-mm-yy
         fecha: fechaDDMMYY,
         fecha_iso: fechaIso,
@@ -383,8 +478,7 @@ function inicializarEventListeners() {
         timestamp: new Date().toISOString(),
       }
 
-      console.log("[v0] Enviando formulario - turnoData:", turnoData)
-      const enviado = await enviarReservaAGoogleSheets(turnoData)
+      const enviado = await enviarReserva(turnoData)
 
       if (!enviado) {
         ocultarModalCarga()
@@ -400,11 +494,11 @@ function inicializarEventListeners() {
       reservas[fechaIso][horario] = {
         nombre,
         apellido,
-        email,
+        telefono,
         barbero,
         nombreBarbero,
         servicio: SERVICIOS[servicio].nombre,
-        duracionMinutos: Math.round(SERVICIOS[servicio].duracion * 60),
+        duracionMinutos: durMinutos,
         fecha: fechaDDMMYY,
         fecha_iso: fechaIso,
         pago,
@@ -417,7 +511,7 @@ function inicializarEventListeners() {
       // Simular pequeña demora para que se vea la animación
       setTimeout(() => {
         ocultarModalCarga()
-        mostrarModalConfirm(nombre, apellido, SERVICIOS[servicio].nombre, nombreBarbero, fechaDDMMYY, horario, email)
+        mostrarModalConfirm(nombre, apellido, SERVICIOS[servicio].nombre, nombreBarbero, fechaDDMMYY, horario, telefono)
       }, 1500)
 
       document.getElementById("bookingForm").reset()
@@ -459,20 +553,19 @@ function inicializarEventListeners() {
 
 // Inicializar al cargar la página
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("[DEBUG] DOM cargado, inicializando...")
-  
   configurarInputFecha()
-  mostrarReservasConfirmadas()
+  if (document.getElementById('reservasInfo')) {
+    mostrarReservasConfirmadas()
+  }
   
   const btnSubmit = document.querySelector(".btn-submit")
   if (btnSubmit) {
     btnSubmit.disabled = true
   }
   
-  // Inicializar event listeners
   inicializarEventListeners()
   
-  // Inicializar toggler del menú hamburguesa
+  // Inicializar menú hamburguesa
   const navToggle = document.getElementById("navToggle")
   const navPrimary = document.getElementById("navPrimary")
   if (navToggle && navPrimary) {
@@ -481,7 +574,6 @@ document.addEventListener("DOMContentLoaded", () => {
       navToggle.setAttribute("aria-expanded", String(!expanded))
       navPrimary.classList.toggle("active")
     })
-    // Cerrar menú al hacer click en un link
     const navLinks = navPrimary.querySelectorAll(".nav-links a")
     navLinks.forEach((a) =>
       a.addEventListener("click", () => {
@@ -490,6 +582,4 @@ document.addEventListener("DOMContentLoaded", () => {
       }),
     )
   }
-  
-  console.log("[DEBUG] Inicialización completada")
 })

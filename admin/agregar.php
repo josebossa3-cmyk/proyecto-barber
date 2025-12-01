@@ -8,41 +8,90 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cliente       = trim($_POST['cliente'] ?? '');
-    $email         = trim($_POST['email'] ?? '');
+    $telefono      = trim($_POST['telefono'] ?? '');
     $servicio      = trim($_POST['servicio'] ?? '');
     $fecha         = trim($_POST['fecha'] ?? '');
     $hora          = trim($_POST['hora'] ?? '');
     $barbero       = trim($_POST['barbero'] ?? '');
     $pago          = trim($_POST['pago'] ?? '');
-    $duracionMin   = intval($_POST['duracionMinutos'] ?? 0);
+    $duracionMin   = 0;
 
-    // Validar campos requeridos
-    if (!$cliente || !$email || !$servicio || !$fecha || !$hora || !$barbero || !$pago) {
+    if (!$cliente || !$telefono || !$servicio || !$fecha || !$hora || !$barbero || !$pago) {
         $error = 'Por favor completa todos los campos requeridos.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'El email no es válido.';
-    } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
-        $error = 'La fecha debe estar en formato YYYY-MM-DD.';
-    } elseif (!preg_match('/^\d{2}:\d{2}$/', $hora)) {
-        $error = 'La hora debe estar en formato HH:MM.';
     } else {
-        // Insertar turno
+        $telefono_digits = preg_replace('/[^0-9]/', '', $telefono);
+        if (strlen($telefono_digits) < 7) {
+            $error = 'Teléfono inválido.';
+        } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            $error = 'La fecha debe estar en formato YYYY-MM-DD.';
+        } elseif (!preg_match('/^\d{2}:\d{2}$/', $hora)) {
+            $error = 'La hora debe estar en formato HH:MM.';
+        }
+    }
+
+    if (empty($error) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
-            $stmt = $conexion->prepare("INSERT INTO turnos (cliente, email, servicio, fecha, hora, barbero, pago, duracionMinutos) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $today = new DateTime('today');
+            $today->setTime(0,0,0);
+            $maxDate = new DateTime('today');
+            $maxDate->modify('+2 days');
+            $maxDate->setTime(0,0,0);
+            $fechaObj = DateTime::createFromFormat('Y-m-d', $fecha);
+            if ($fechaObj) $fechaObj->setTime(0,0,0);
+            
+            if (!$fechaObj || $fechaObj < $today || $fechaObj > $maxDate) {
+                throw new Exception('Solo puedes reservar desde hoy hasta 2 días después.');
+            }
+
+            $servicioNorm = preg_replace('/\s+/', ' ', str_replace(['-', '+'], ' ', trim(mb_strtolower($servicio, 'UTF-8'))));
+            $allowedServices = ['corte barba' => 90, 'corte color' => 120, 'corte' => 30];
+            $duracionMin = 60;
+            $servicioStandard = $servicio;
+            
+            foreach ($allowedServices as $key => $dur) {
+                if ($servicioNorm === $key) {
+                    $duracionMin = $dur;
+                    $servicioStandard = ucfirst(str_replace(['barba', 'color'], ['Barba', 'Color'], $key));
+                    break;
+                }
+            }
+            $servicio = $servicioStandard;
+            $parts = explode(':', $hora);
+            $startMin = intval($parts[0]) * 60 + intval($parts[1]);
+            $stmtCheck = $conexion->prepare("SELECT hora, duracionMinutos FROM turnos WHERE fecha = ? AND barbero = ?");
+            if ($stmtCheck) {
+                $stmtCheck->bind_param('ss', $fecha, $barbero);
+                $stmtCheck->execute();
+                $resCheck = $stmtCheck->get_result();
+                while ($r = $resCheck->fetch_assoc()) {
+                    $p = explode(':', substr($r['hora'],0,5));
+                    $existStart = intval($p[0]) * 60 + intval($p[1]);
+                    $existDur = intval($r['duracionMinutos']) > 0 ? intval($r['duracionMinutos']) : 60;
+                    $existEnd = $existStart + $existDur;
+
+                    $newStart = $startMin;
+                    $newEnd = $startMin + $duracionMin;
+                    if ($newStart < $existEnd && $existStart < $newEnd) {
+                        throw new Exception('Horario no disponible: conflicto con otro turno');
+                    }
+                }
+                $stmtCheck->close();
+            }
+
+            $stmt = $conexion->prepare("INSERT INTO turnos (cliente, telefono, servicio, fecha, hora, barbero, pago, duracionMinutos) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             if (!$stmt) {
                 throw new Exception("Error en preparación: " . $conexion->error);
             }
-            
-            $stmt->bind_param('sssssssi', $cliente, $email, $servicio, $fecha, $hora, $barbero, $pago, $duracionMin);
-            
+
+            $stmt->bind_param('sssssssi', $cliente, $telefono, $servicio, $fecha, $hora, $barbero, $pago, $duracionMin);
+
             if ($stmt->execute()) {
                 $mensaje = 'Turno agregado exitosamente (ID: ' . $stmt->insert_id . ')';
-                // Limpiar formulario
                 $_POST = [];
             } else {
                 throw new Exception("Error al insertar: " . $stmt->error);
             }
-            
+
             $stmt->close();
         } catch (Exception $e) {
             $error = 'Error: ' . $e->getMessage();
@@ -76,6 +125,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .back-link { display: inline-block; margin-top: 20px; color: #008CBA; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
+        
+        /* Estilos para horarios */
+        .horarios-wrapper { width: 100%; }
+        .horarios-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; min-height: 100px; }
+        .horario-btn { padding: 12px 8px; border: 2px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; text-align: center; }
+        .horario-btn:hover:not(:disabled) { background: #e3f2fd; border-color: #2196F3; transform: translateY(-2px); }
+        .horario-btn:disabled { background: #f0f0f0; color: #999; cursor: not-allowed; opacity: 0.6; }
+        .horario-btn.selected { background: #4CAF50; color: white; border-color: #4CAF50; }
+        .placeholder-text { color: #999; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
@@ -97,17 +155,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             
             <div class="form-group">
-                <label for="email">Email *</label>
-                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
+                <label for="telefono">Teléfono *</label>
+                <input type="tel" id="telefono" name="telefono" value="<?php echo htmlspecialchars($_POST['telefono'] ?? ''); ?>" required>
             </div>
             
             <div class="form-group">
                 <label for="servicio">Servicio *</label>
                 <select id="servicio" name="servicio" required>
                     <option value="">Selecciona un servicio</option>
-                    <option value="Corte" <?php echo ($_POST['servicio'] ?? '') === 'Corte' ? 'selected' : ''; ?>>Corte (30 min)</option>
-                    <option value="Corte + Barba" <?php echo ($_POST['servicio'] ?? '') === 'Corte + Barba' ? 'selected' : ''; ?>>Corte + Barba (90 min)</option>
-                    <option value="Corte + Color" <?php echo ($_POST['servicio'] ?? '') === 'Corte + Color' ? 'selected' : ''; ?>>Corte + Color (120 min)</option>
+                    <option value="corte" <?php echo ($_POST['servicio'] ?? '') === 'corte' ? 'selected' : ''; ?>>Corte (30 min)</option>
+                    <option value="corte-barba" <?php echo ($_POST['servicio'] ?? '') === 'corte-barba' ? 'selected' : ''; ?>>Corte + Barba (90 min)</option>
+                    <option value="corte-color" <?php echo ($_POST['servicio'] ?? '') === 'corte-color' ? 'selected' : ''; ?>>Corte + Color (120 min)</option>
                 </select>
             </div>
             
@@ -117,17 +175,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             
             <div class="form-group">
-                <label for="hora">Hora *</label>
-                <input type="time" id="hora" name="hora" value="<?php echo htmlspecialchars($_POST['hora'] ?? ''); ?>" required>
+                <label for="hora">Horarios disponibles *</label>
+                <input type="hidden" id="hora" name="hora" value="<?php echo htmlspecialchars($_POST['hora'] ?? ''); ?>">
+                <div class="horarios-wrapper">
+                    <div id="horariosContainer" class="horarios-container" data-horarios-seleccionados=""></div>
+                </div>
             </div>
             
             <div class="form-group">
                 <label for="barbero">Barbero *</label>
                 <select id="barbero" name="barbero" required>
                     <option value="">Selecciona un barbero</option>
-                    <option value="Carlos" <?php echo ($_POST['barbero'] ?? '') === 'Carlos' ? 'selected' : ''; ?>>Carlos</option>
-                    <option value="Juan" <?php echo ($_POST['barbero'] ?? '') === 'Juan' ? 'selected' : ''; ?>>Juan</option>
-                    <option value="Diego" <?php echo ($_POST['barbero'] ?? '') === 'Diego' ? 'selected' : ''; ?>>Diego</option>
+                    <option value="carlos" <?php echo ($_POST['barbero'] ?? '') === 'carlos' ? 'selected' : ''; ?>>Carlos</option>
+                    <option value="juan" <?php echo ($_POST['barbero'] ?? '') === 'juan' ? 'selected' : ''; ?>>Juan</option>
+                    <option value="diego" <?php echo ($_POST['barbero'] ?? '') === 'diego' ? 'selected' : ''; ?>>Diego</option>
                 </select>
             </div>
             
@@ -140,16 +201,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
             
-            <div class="form-group">
-                <label for="duracionMinutos">Duración (minutos)</label>
-                <input type="number" id="duracionMinutos" name="duracionMinutos" value="<?php echo htmlspecialchars($_POST['duracionMinutos'] ?? '0'); ?>" min="0">
-            </div>
+            <input type="hidden" id="duracionMinutos" name="duracionMinutos" value="<?php echo htmlspecialchars($_POST['duracionMinutos'] ?? ''); ?>">
             
             <div class="btn-group">
                 <button type="submit" class="btn-guardar">Guardar Turno</button>
                 <a href="dashboard.php" class="btn-volver" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">Volver</a>
             </div>
         </form>
+    <script src="../js/script.js?v=1.2"></script>
+    <script>
+    // Configurar input de fecha con restricción de mínimo 2 días
+    document.addEventListener('DOMContentLoaded', function() {
+        configurarInputFecha();
+        
+        // Renderizar horarios al cambiar servicio, fecha o barbero
+        ['servicio','fecha','barbero'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', function() {
+                    renderizarHorarios();
+                });
+            }
+        });
+        
+        // Observar cambios en el dataset del contenedor de horarios
+        const container = document.getElementById('horariosContainer');
+        if (container) {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'data-horarios-seleccionados') {
+                        const horario = container.dataset.horariosSeleccionados;
+                        const horaInput = document.getElementById('hora');
+                        if (horaInput && horario) {
+                            horaInput.value = horario;
+                        }
+                    }
+                });
+            });
+            observer.observe(container, { attributes: true });
+        }
+        
+        // Renderizar horarios inicial si hay valores
+        setTimeout(renderizarHorarios, 100);
+    });
+    </script>
     </div>
 </body>
 </html>

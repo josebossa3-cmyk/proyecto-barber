@@ -36,7 +36,7 @@ try {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cliente       = trim($_POST['cliente'] ?? '');
-    $email         = trim($_POST['email'] ?? '');
+    $telefono      = trim($_POST['telefono'] ?? '');
     $servicio      = trim($_POST['servicio'] ?? '');
     $fecha         = trim($_POST['fecha'] ?? '');
     $hora          = trim($_POST['hora'] ?? '');
@@ -45,23 +45,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $duracionMin   = intval($_POST['duracionMinutos'] ?? 0);
 
     // Validar campos requeridos
-    if (!$cliente || !$email || !$servicio || !$fecha || !$hora || !$barbero || !$pago) {
+    if (!$cliente || !$telefono || !$servicio || !$fecha || !$hora || !$barbero || !$pago) {
         $error = 'Por favor completa todos los campos requeridos.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'El email no es válido.';
-    } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
-        $error = 'La fecha debe estar en formato YYYY-MM-DD.';
-    } elseif (!preg_match('/^\d{2}:\d{2}$/', $hora)) {
-        $error = 'La hora debe estar en formato HH:MM.';
     } else {
+        // Validar teléfono
+        $telefono_digits = preg_replace('/[^0-9]/', '', $telefono);
+        if (strlen($telefono_digits) < 7) {
+            $error = 'Teléfono inválido.';
+        } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            $error = 'La fecha debe estar en formato YYYY-MM-DD.';
+        } elseif (!preg_match('/^\d{2}:\d{2}$/', $hora)) {
+            $error = 'La hora debe estar en formato HH:MM.';
+        } else {
+            // continuar
+        }
+    }
+
+    // Si no hay errores, aplicar cambios y calcular duración automáticamente
+    if (empty($error) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         // Actualizar turno
         try {
-            $stmt = $conexion->prepare("UPDATE turnos SET cliente=?, email=?, servicio=?, fecha=?, hora=?, barbero=?, pago=?, duracionMinutos=? WHERE id=?");
+            // validar fecha mínima (>= hoy + 2 días)
+            $min = new DateTime('today');
+            $min->modify('+2 days');
+            $fechaObj = DateTime::createFromFormat('Y-m-d', $fecha);
+            if (!$fechaObj || $fechaObj < $min) {
+                throw new Exception('La fecha debe ser al menos dentro de 2 días.');
+            }
+
+            // Calcular duración automática (normalizar para comparación)
+            // Reemplazar separadores especiales (-, +) por espacios, luego limpiar espacios múltiples
+            $servicioNorm = preg_replace('/\s+/', ' ', str_replace(['-', '+'], ' ', trim(mb_strtolower($servicio, 'UTF-8'))));
+            $allowedServices = ['corte barba' => 90, 'corte color' => 120, 'corte' => 30];
+            $duracionMin = 60; // default
+            $servicioStandard = $servicio; // mantener original por defecto
+            foreach ($allowedServices as $key => $dur) {
+                if ($servicioNorm === $key) {
+                    $duracionMin = $dur;
+                    // Capitalizar la versión estándar del servicio
+                    $servicioStandard = ucfirst(str_replace(['barba', 'color'], ['Barba', 'Color'], $key));
+                    break;
+                }
+            }
+            $servicio = $servicioStandard; // actualizar $servicio para inserción en BD
+
+            // Comprobar solapamientos al editar (CRÍTICO)
+            $parts = explode(':', $hora);
+            $startMin = intval($parts[0]) * 60 + intval($parts[1]);
+            $stmtCheck = $conexion->prepare("SELECT hora, duracionMinutos FROM turnos WHERE fecha = ? AND barbero = ? AND id != ?");
+            if ($stmtCheck) {
+                $stmtCheck->bind_param('ssi', $fecha, $barbero, $id);
+                $stmtCheck->execute();
+                $resCheck = $stmtCheck->get_result();
+                while ($r = $resCheck->fetch_assoc()) {
+                    $p = explode(':', substr($r['hora'],0,5));
+                    $existStart = intval($p[0]) * 60 + intval($p[1]);
+                    $existDur = intval($r['duracionMinutos']) > 0 ? intval($r['duracionMinutos']) : 60;
+                    $existEnd = $existStart + $existDur;
+
+                    $newStart = $startMin;
+                    $newEnd = $startMin + $duracionMin;
+                    if ($newStart < $existEnd && $existStart < $newEnd) {
+                        throw new Exception('Horario no disponible: conflicto con otro turno');
+                    }
+                }
+                $stmtCheck->close();
+            }
+
+            $stmt = $conexion->prepare("UPDATE turnos SET cliente=?, telefono=?, servicio=?, fecha=?, hora=?, barbero=?, pago=?, duracionMinutos=? WHERE id=?");
             if (!$stmt) {
                 throw new Exception("Error en preparación: " . $conexion->error);
             }
             
-            $stmt->bind_param('sssssssii', $cliente, $email, $servicio, $fecha, $hora, $barbero, $pago, $duracionMin, $id);
+            $stmt->bind_param('sssssssii', $cliente, $telefono, $servicio, $fecha, $hora, $barbero, $pago, $duracionMin, $id);
             
             if ($stmt->execute()) {
                 $mensaje = 'Turno actualizado exitosamente.';
@@ -69,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $turno = [
                     'id' => $id,
                     'cliente' => $cliente,
-                    'email' => $email,
+                    'telefono' => $telefono,
                     'servicio' => $servicio,
                     'fecha' => $fecha,
                     'hora' => $hora,
@@ -135,8 +191,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             
             <div class="form-group">
-                <label for="email">Email *</label>
-                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($turno['email'] ?? ''); ?>" required>
+                <label for="telefono">Teléfono *</label>
+                <input type="tel" id="telefono" name="telefono" value="<?php echo htmlspecialchars($turno['telefono'] ?? ''); ?>" required>
             </div>
             
             <div class="form-group">
@@ -178,10 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
             
-            <div class="form-group">
-                <label for="duracionMinutos">Duración (minutos)</label>
-                <input type="number" id="duracionMinutos" name="duracionMinutos" value="<?php echo htmlspecialchars($turno['duracionMinutos'] ?? '0'); ?>" min="0">
-            </div>
+            <input type="hidden" id="duracionMinutos" name="duracionMinutos" value="<?php echo htmlspecialchars($turno['duracionMinutos'] ?? ''); ?>">
             
             <div class="btn-group">
                 <button type="submit" class="btn-guardar">Guardar Cambios</button>

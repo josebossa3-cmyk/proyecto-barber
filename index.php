@@ -8,7 +8,7 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BUNKER Barber Studio</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=1.2" />
 </head>
 <body>
     <!-- Header -->
@@ -80,7 +80,7 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
             <form class="booking-form" id="bookingForm" action="procesar_reserva.php" method="POST">
                 <div class="form-group"><label for="nombre">Nombre</label><input type="text" id="nombre" name="nombre" required /></div>
                 <div class="form-group"><label for="apellido">Apellido</label><input type="text" id="apellido" name="apellido" required /></div>
-                <div class="form-group"><label for="email">E-mail</label><input type="email" id="email" name="email" required /></div>
+                <div class="form-group"><label for="telefono">Teléfono</label><input type="tel" id="telefono" name="telefono" required /></div>
                 <div class="form-group"><label for="servicio">Servicio</label>
                     <select id="servicio" name="servicio" required>
                         <option value="">Selecciona un servicio</option>
@@ -90,13 +90,14 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
                     </select>
                 </div>
                 <div class="form-group"><label for="fecha">Fecha</label><input type="date" id="fecha" name="fecha" required /></div>
-                <div class="form-group"><label for="barbero">Barbero</label>
-                    <select id="barbero" name="barbero" required>
-                        <option value="">Selecciona un barbero</option>
-                        <option value="carlos">Carlos</option>
-                        <option value="juan">Juan</option>
-                        <option value="diego">Diego</option>
-                    </select>
+                <div class="form-group">
+                    <label>Barbero</label>
+                    <input type="hidden" id="barbero" name="barbero" required />
+                    <div class="barbero-buttons">
+                        <button type="button" class="barbero-btn" data-barbero="carlos">Carlos</button>
+                        <button type="button" class="barbero-btn" data-barbero="juan">Juan</button>
+                        <button type="button" class="barbero-btn" data-barbero="diego">Diego</button>
+                    </div>
                 </div>
 
                 <!-- Horarios renderizados por JS -->
@@ -109,6 +110,7 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
 
                 <!-- Input oculto para enviar la hora al servidor si se usa envío tradicional -->
                 <input type="hidden" id="hora" name="hora" />
+                <input type="hidden" id="duracionMinutos" name="duracionMinutos" />
 
                 <div class="form-group"><label for="pago">Método de Pago</label>
                     <select id="pago" name="pago" required>
@@ -153,6 +155,6 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
     <!-- Toast -->
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-    <script src="js/script.js"></script>
+    <script src="js/script.js?v=1.2"></script>
 </body>
 </html>

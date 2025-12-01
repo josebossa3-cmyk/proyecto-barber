@@ -13,7 +13,7 @@ VALUES ('admin', 'admin123');
 CREATE TABLE turnos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   cliente VARCHAR(150) NOT NULL,
-  email VARCHAR(150) DEFAULT NULL,
+  telefono VARCHAR(50) DEFAULT NULL,
   servicio VARCHAR(100) NOT NULL,
   fecha DATE NOT NULL,
   hora TIME NOT NULL,

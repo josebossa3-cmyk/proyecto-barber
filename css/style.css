@@ -488,6 +488,42 @@ body {
   background: rgba(15, 20, 25, 0.9);
 }
 
+/* Barbero buttons */
+.barbero-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.barbero-btn {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-blue) 100%);
+  color: var(--accent-copper);
+  border: 1px solid var(--accent-copper);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(22, 48, 43, 0.4);
+}
+
+.barbero-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(184, 134, 11, 0.3);
+  border-color: var(--accent-copper);
+}
+
+.barbero-btn.active {
+  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-primary) 100%);
+  border-color: var(--accent-copper);
+  color: var(--text-primary);
+  box-shadow: 0 0 25px rgba(184, 134, 11, 0.6);
+  transform: translateY(-2px) scale(1.02);
+}
+
 .form-row-two {
   display: grid;
   grid-template-columns: 1fr 1fr;

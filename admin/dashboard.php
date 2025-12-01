@@ -20,7 +20,7 @@ $search_param = '%' . $search . '%';
 
 // Consultar turnos
 if ($search) {
-    $sql = "SELECT * FROM turnos WHERE cliente LIKE ? OR email LIKE ? ORDER BY fecha DESC, hora DESC";
+    $sql = "SELECT * FROM turnos WHERE cliente LIKE ? OR telefono LIKE ? ORDER BY fecha DESC, hora DESC";
     $stmt = $conexion->prepare($sql);
     $stmt->bind_param('ss', $search_param, $search_param);
 } else {
@@ -78,6 +78,9 @@ $total_turnos = count($turnos);
         .stat-number { font-size: 32px; font-weight: bold; color: #4CAF50; }
         .stat-label { color: #999; font-size: 14px; margin-top: 5px; }
         .hide-id { display: none; }
+        .btn-filter { background: #6c757d; color: white; transition: all 0.3s ease; }
+        .btn-filter:hover { background: #5a6268; }
+        .btn-filter.active { background: #28a745; box-shadow: 0 0 10px rgba(40, 167, 69, 0.5); }
     </style>
 </head>
 <body>
@@ -129,9 +132,18 @@ $total_turnos = count($turnos);
         
         <!-- Toolbar -->
         <div class="toolbar">
-            <input type="search" id="searchInput" placeholder="🔍 Buscar por nombre o email..." value="<?php echo htmlspecialchars($search); ?>">
+            <input type="search" id="searchInput" placeholder="🔍 Buscar por nombre o teléfono..." value="<?php echo htmlspecialchars($search); ?>">
             <a href="agregar.php" class="btn btn-primary">+ Agregar Turno</a>
             <button class="btn btn-secondary" onclick="document.location = '?'">🔄 Limpiar Búsqueda</button>
+            <button class="btn btn-secondary" onclick="limpiarCache()">🗑️ Limpiar Cache</button>
+        </div>
+        
+        <!-- Filtros de barbero -->
+        <div class="toolbar" style="margin-top: 10px;">
+            <button class="btn btn-filter active" onclick="filtrarPorBarbero('todos')">Todos</button>
+            <button class="btn btn-filter" onclick="filtrarPorBarbero('carlos')">Carlos</button>
+            <button class="btn btn-filter" onclick="filtrarPorBarbero('juan')">Juan</button>
+            <button class="btn btn-filter" onclick="filtrarPorBarbero('diego')">Diego</button>
         </div>
         
         <!-- Tabla de turnos -->
@@ -144,7 +156,7 @@ $total_turnos = count($turnos);
                         <th>Fecha</th>
                         <th>Hora</th>
                         <th>Cliente</th>
-                        <th>Email</th>
+                        <th>Teléfono</th>
                         <th>Servicio</th>
                         <th>Barbero</th>
                         <th>Pago</th>
@@ -159,7 +171,7 @@ $total_turnos = count($turnos);
                         <td><?php echo $turno['fecha']; ?></td>
                         <td><?php echo substr($turno['hora'], 0, 5); ?></td>
                         <td><?php echo htmlspecialchars($turno['cliente']); ?></td>
-                        <td><?php echo htmlspecialchars($turno['email'] ?? '-'); ?></td>
+                        <td><?php echo htmlspecialchars($turno['telefono'] ?? '-'); ?></td>
                         <td><?php echo htmlspecialchars($turno['servicio']); ?></td>
                         <td><?php echo htmlspecialchars($turno['barbero'] ?? '-'); ?></td>
                         <td><?php echo htmlspecialchars($turno['pago'] ?? '-'); ?></td>
@@ -192,6 +204,34 @@ $total_turnos = count($turnos);
                 window.location = '?search=' + encodeURIComponent(search);
             }
         });
+
+        // Limpiar cache (localStorage)
+        function limpiarCache() {
+            if (confirm('¿Seguro que deseas limpiar el cache? Esto borrará todos los datos almacenados localmente.')) {
+                localStorage.clear();
+                alert('Cache limpiado exitosamente');
+            }
+        }
+
+        // Filtrar turnos por barbero
+        function filtrarPorBarbero(barbero) {
+            const filas = document.querySelectorAll('tbody tr');
+            const botones = document.querySelectorAll('.btn-filter');
+            
+            // Actualizar botones activos
+            botones.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Filtrar filas
+            filas.forEach(fila => {
+                const barberoCell = fila.querySelector('td:nth-child(7)').textContent.toLowerCase().trim();
+                if (barbero === 'todos' || barberoCell === barbero) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
     </script>
 </body>
 </html>

@@ -29,6 +29,4 @@ if ($resultado->num_rows === 1) {
     header("Location: login.php?error=credenciales");
     exit();
 }
-
-$stmt->close();
 ?>
