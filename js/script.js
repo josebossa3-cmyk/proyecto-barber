@@ -348,19 +348,6 @@ function actualizarResumen() {
   }
 }
 
-// Mostrar las reservas confirmadas
-function mostrarReservasConfirmadas() {
-  const contenedor = document.getElementById("reservasInfo")
-  contenedor.innerHTML = `
-    <div class="reservas-titulo">
-      ✅ Sistema de Reservas Activo
-      <p style="color: #a8a8a8; font-size: 14px; margin-top: 8px; font-weight: 400;">
-        Las reservas confirmadas se registran en el sistema y recibirás confirmación.
-      </p>
-    </div>
-  `
-}
-
 async function enviarReserva(turnoData) {
   try {
     const res = await fetch(WEB_APP_URL, {
@@ -521,8 +508,7 @@ function inicializarEventListeners() {
       document.querySelectorAll(".horario-btn").forEach((b) => b.classList.remove("selected"))
 
       renderizarHorarios()
-      mostrarReservasConfirmadas()
-    })
+    }
   }
 
   // Carrusel
@@ -554,9 +540,6 @@ function inicializarEventListeners() {
 // Inicializar al cargar la página
 document.addEventListener("DOMContentLoaded", () => {
   configurarInputFecha()
-  if (document.getElementById('reservasInfo')) {
-    mostrarReservasConfirmadas()
-  }
   
   const btnSubmit = document.querySelector(".btn-submit")
   if (btnSubmit) {
@@ -564,22 +547,4 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   inicializarEventListeners()
-  
-  // Inicializar menú hamburguesa
-  const navToggle = document.getElementById("navToggle")
-  const navPrimary = document.getElementById("navPrimary")
-  if (navToggle && navPrimary) {
-    navToggle.addEventListener("click", () => {
-      const expanded = navToggle.getAttribute("aria-expanded") === "true"
-      navToggle.setAttribute("aria-expanded", String(!expanded))
-      navPrimary.classList.toggle("active")
-    })
-    const navLinks = navPrimary.querySelectorAll(".nav-links a")
-    navLinks.forEach((a) =>
-      a.addEventListener("click", () => {
-        navPrimary.classList.remove("active")
-        navToggle.setAttribute("aria-expanded", "false")
-      }),
-    )
-  }
 })

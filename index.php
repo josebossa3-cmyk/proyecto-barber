@@ -8,7 +8,7 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BUNKER Barber Studio</title>
-  <link rel="stylesheet" href="css/style.css?v=1.2" />
+  <link rel="stylesheet" href="css/style.css?v=1.6" />
 </head>
 <body>
     <!-- Header -->
@@ -18,13 +18,9 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
             <p class="tagline">barber studio</p>
         </div>
         <nav class="nav-primary" id="navPrimary">
-            <button id="navToggle" class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
-                <span class="hamburger"></span>
-            </button>
             <ul class="nav-links">
                 <li><a href="#services">Servicios</a></li>
                 <li><a href="#contact">Contacto</a></li>
-                <li class="mobile-reserve"><a href="#booking" class="btn-header-mobile">Reservar Ahora</a></li>
             </ul>
         </nav>
         <div style="display:flex;gap:12px;align-items:center">
@@ -123,9 +119,41 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
                 <div id="resumenReserva" class="booking-summary"></div>
                 <button type="submit" class="btn-submit">Confirmar Reserva</button>
             </form>
+        </div>
+    </section>
 
-            <!-- Área para mostrar estado de reservas -->
-            <div id="reservasInfo" style="margin-top:18px"></div>
+    <!-- Ubicación -->
+    <section id="location" class="location-section">
+        <div class="location-container">
+            <h2 class="section-title">Nuestra Ubicación</h2>
+            <div class="location-content">
+                <div class="location-map">
+                    <!-- Reemplaza el src con tu URL de Google Maps embed -->
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d495.88853997739193!2d-66.30235836713537!3d-33.268399070722566!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95d43fc82709156f%3A0xc0bfef49ddea3ea5!2sBarber%C3%ADa%20bunker%20tattoo!5e0!3m2!1ses-419!2sar!4v1764726786118!5m2!1ses-419!2sar"
+                        width="100%" 
+                        height="450" 
+                        style="border:0; border-radius: 12px;" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+                <div class="location-info">
+                    <div class="info-box">
+                        <h3>📍 Dirección</h3>
+                        <p>Escribe tu dirección aquí<br>Ciudad, Provincia, CP</p>
+                    </div>
+                    <div class="info-box">
+                        <h3>📞 Contacto</h3>
+                        <p>Tel: +54 9 11 XXXX-XXXX<br>Tel: +54 9 11 YYYY-YYYY</p>
+                    </div>
+                    <div class="info-box">
+                        <h3>⏰ Horarios</h3>
+                        <p>Lunes a Viernes: 9:00 - 20:00<br>Sábados: 9:00 - 18:00<br>Domingos: Cerrado</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 

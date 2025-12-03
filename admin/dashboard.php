@@ -178,7 +178,6 @@ $total_turnos = count($turnos);
                         <td><?php echo intval($turno['duracionMinutos']) > 0 ? $turno['duracionMinutos'] . ' min' : '-'; ?></td>
                         <td>
                             <div class="actions">
-                                <a href="editar.php?id=<?php echo $turno['id']; ?>" class="btn btn-sm btn-edit">✏️ Editar</a>
                                 <a href="eliminar.php?id=<?php echo $turno['id']; ?>" class="btn btn-sm btn-delete" onclick="return confirm('¿Seguro que deseas eliminar este turno?');">🗑️ Eliminar</a>
                             </div>
                         </td>
