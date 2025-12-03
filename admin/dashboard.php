@@ -141,9 +141,9 @@ $total_turnos = count($turnos);
         <!-- Filtros de barbero -->
         <div class="toolbar" style="margin-top: 10px;">
             <button class="btn btn-filter active" onclick="filtrarPorBarbero('todos')">Todos</button>
-            <button class="btn btn-filter" onclick="filtrarPorBarbero('carlos')">Carlos</button>
-            <button class="btn btn-filter" onclick="filtrarPorBarbero('juan')">Juan</button>
-            <button class="btn btn-filter" onclick="filtrarPorBarbero('diego')">Diego</button>
+            <button class="btn btn-filter" onclick="filtrarPorBarbero('samuel')">Samuel Barroso</button>
+            <button class="btn btn-filter" onclick="filtrarPorBarbero('ale')">Ale Alegría</button>
+            <button class="btn btn-filter" onclick="filtrarPorBarbero('alexis')">Alexis</button>
         </div>
         
         <!-- Tabla de turnos -->

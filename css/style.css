@@ -501,13 +501,24 @@ body {
   color: var(--accent-copper);
   border: 1px solid var(--accent-copper);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 16px rgba(22, 48, 43, 0.4);
+  line-height: 1.4;
+}
+
+.barbero-btn small {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  opacity: 0.9;
 }
 
 .barbero-btn:hover {

@@ -186,9 +186,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="barbero">Barbero *</label>
                 <select id="barbero" name="barbero" required>
                     <option value="">Selecciona un barbero</option>
-                    <option value="carlos" <?php echo ($_POST['barbero'] ?? '') === 'carlos' ? 'selected' : ''; ?>>Carlos</option>
-                    <option value="juan" <?php echo ($_POST['barbero'] ?? '') === 'juan' ? 'selected' : ''; ?>>Juan</option>
-                    <option value="diego" <?php echo ($_POST['barbero'] ?? '') === 'diego' ? 'selected' : ''; ?>>Diego</option>
+                    <option value="samuel" <?php echo ($_POST['barbero'] ?? '') === 'samuel' ? 'selected' : ''; ?>>Samuel Barroso (Barbero y Tatuador)</option>
+                    <option value="ale" <?php echo ($_POST['barbero'] ?? '') === 'ale' ? 'selected' : ''; ?>>Ale Alegría (Barbero)</option>
+                    <option value="alexis" <?php echo ($_POST['barbero'] ?? '') === 'alexis' ? 'selected' : ''; ?>>Alexis (Barbero)</option>
                 </select>
             </div>
             
@@ -208,18 +208,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="dashboard.php" class="btn-volver" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">Volver</a>
             </div>
         </form>
-    <script src="../js/script.js?v=1.2"></script>
+    <script src="../js/script.js?v=2.0"></script>
     <script>
-    // Configurar input de fecha con restricción de mínimo 2 días
+    // Configurar input de fecha: desde hoy hasta 2 días después
     document.addEventListener('DOMContentLoaded', function() {
-        configurarInputFecha();
+        const inputFecha = document.getElementById("fecha");
+        if (inputFecha) {
+            const hoy = new Date();
+            const minStr = hoy.toISOString().split("T")[0];
+            const max = new Date(hoy);
+            max.setDate(hoy.getDate() + 2);
+            const maxStr = max.toISOString().split("T")[0];
+            
+            inputFecha.min = minStr;
+            inputFecha.max = maxStr;
+            inputFecha.value = minStr; // Establecer hoy por defecto
+        }
         
         // Renderizar horarios al cambiar servicio, fecha o barbero
         ['servicio','fecha','barbero'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', function() {
-                    renderizarHorarios();
+                    if (typeof renderizarHorarios === 'function') {
+                        renderizarHorarios();
+                    }
                 });
             }
         });
@@ -241,8 +254,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             observer.observe(container, { attributes: true });
         }
         
-        // Renderizar horarios inicial si hay valores
-        setTimeout(renderizarHorarios, 100);
+        // Mensaje inicial en el contenedor de horarios
+        if (container) {
+            container.innerHTML = '<p class="placeholder-text">Selecciona servicio, fecha y barbero para ver horarios disponibles</p>';
+        }
     });
     </script>
     </div>

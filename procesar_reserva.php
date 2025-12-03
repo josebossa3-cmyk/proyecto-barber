@@ -138,7 +138,7 @@ try {
     } catch (Exception $e) {
     }
     
-    $barberosPermitidos = ['carlos', 'juan', 'diego'];
+    $barberosPermitidos = ['samuel', 'ale', 'alexis'];
     if (!in_array(mb_strtolower($barbero, 'UTF-8'), $barberosPermitidos, true)) {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'Barbero no válido'], JSON_UNESCAPED_UNICODE);

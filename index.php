@@ -8,7 +8,7 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BUNKER Barber Studio</title>
-  <link rel="stylesheet" href="css/style.css?v=1.6" />
+  <link rel="stylesheet" href="css/style.css?v=2.1" />
 </head>
 <body>
     <!-- Header -->
@@ -59,9 +59,11 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
     <section id="services" class="services-section">
         <h2 class="section-title">Nuestros Servicios</h2>
         <div class="services-grid">
-            <div class="service-card"><div class="service-number">01</div><h3>Corte</h3><p>Corte clásico con atención personalizada</p><span class="price">$8.000</span><span class="duration">30 minutos</span></div>
-            <div class="service-card"><div class="service-number">02</div><h3>Corte + Barba</h3><p>Servicio completo de arreglo facial</p><span class="price">$9.000</span><span class="duration">1.5 horas</span></div>
-            <div class="service-card"><div class="service-number">03</div><h3>Corte + Color</h3><p>Transformación completa con coloración</p><span class="price">Consultar</span><span class="duration">2 horas</span></div>
+            <div class="service-card"><div class="service-number">01</div><h3>Corte</h3><p>Corte clásico con atención personalizada</p><span class="price">$11.000</span><span class="duration">30 minutos</span></div>
+            <div class="service-card"><div class="service-number">02</div><h3>Corte + Barba</h3><p>Servicio completo de arreglo facial</p><span class="price">$13.000</span><span class="duration">1.5 horas</span></div>
+            <div class="service-card"><div class="service-number">03</div><h3>Barba + ceja </h3><span class="price">$6.000</span><span class="duration">2 horas</span></div>
+            <div class="service-card"><div class="service-number">03</div><h3>Afeitado</h3><span class="price">$4.000</span><span class="duration">2 horas</span></div>
+            <div class="service-card"><div class="service-number">03</div><h3>Tintura</h3><span class="price">35.000/40.000</span><span class="duration">2 horas</span></div>
         </div>
     </section>
 
@@ -90,9 +92,9 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
                     <label>Barbero</label>
                     <input type="hidden" id="barbero" name="barbero" required />
                     <div class="barbero-buttons">
-                        <button type="button" class="barbero-btn" data-barbero="carlos">Carlos</button>
-                        <button type="button" class="barbero-btn" data-barbero="juan">Juan</button>
-                        <button type="button" class="barbero-btn" data-barbero="diego">Diego</button>
+                        <button type="button" class="barbero-btn" data-barbero="samuel">Samuel Barroso<br><small>(Barbero y Tatuador)</small></button>
+                        <button type="button" class="barbero-btn" data-barbero="ale">Ale Alegría<br><small>(Barbero)</small></button>
+                        <button type="button" class="barbero-btn" data-barbero="alexis">Alexis<br><small>(Barbero)</small></button>
                     </div>
                 </div>
 
@@ -142,15 +144,15 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
                 <div class="location-info">
                     <div class="info-box">
                         <h3>📍 Dirección</h3>
-                        <p>Escribe tu dirección aquí<br>Ciudad, Provincia, CP</p>
+                        <p>Barrio 157 mza 353 casa 11<br>San Luis , san Luis </p>
                     </div>
                     <div class="info-box">
                         <h3>📞 Contacto</h3>
-                        <p>Tel: +54 9 11 XXXX-XXXX<br>Tel: +54 9 11 YYYY-YYYY</p>
+                        <p>Ale alegria tel: 2664198995<br>Alexis tel: 2665037679<br>Samuel 2664542161</p>
                     </div>
                     <div class="info-box">
-                        <h3>⏰ Horarios</h3>
-                        <p>Lunes a Viernes: 9:00 - 20:00<br>Sábados: 9:00 - 18:00<br>Domingos: Cerrado</p>
+                        <h3>⏰ Horarios De Atención</h3>
+                        <p>Lunes a Sabados: 9:00 - 22:00<br></p>
                     </div>
                 </div>
             </div>
@@ -183,6 +185,6 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
     <!-- Toast -->
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-    <script src="js/script.js?v=1.2"></script>
+    <script src="js/script.js?v=2.0"></script>
 </body>
 </html>
