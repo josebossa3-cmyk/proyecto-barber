@@ -34,7 +34,7 @@ Sistema de gestión de turnos para barbería con panel administrativo completo.
 
 ### Vista Cliente
 - ✅ Selección de servicio (Corte, Corte + Barba, Corte + Color)
-- ✅ Selección de barbero (Carlos, Juan, Diego)
+- ✅ Selección de barbero 
 - ✅ Fecha mínima: hoy + 2 días
 - ✅ Horarios disponibles en tiempo real (09:00 - 21:00)
 - ✅ Prevención de reservas duplicadas/solapadas
