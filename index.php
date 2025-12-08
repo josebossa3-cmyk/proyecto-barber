@@ -148,7 +148,7 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
                     </div>
                     <div class="info-box">
                         <h3>📞 Contacto</h3>
-                        <p>Ale alegria tel: 2664198995<br>Alexis tel: 2665037679<br>Samuel 2664542161</p>
+                        <p>Ale alegria tel: 2664198995<br>Alexis tel: 2665037679<br>Samuel: 2664542161</p>
                     </div>
                     <div class="info-box">
                         <h3>⏰ Horarios De Atención</h3>
