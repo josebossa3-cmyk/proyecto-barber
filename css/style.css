@@ -1130,6 +1130,33 @@ body {
 
   .services-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .service-card {
+    padding: 24px 20px;
+    gap: 10px;
+  }
+
+  .service-number {
+    font-size: 28px;
+  }
+
+  .service-card h3 {
+    font-size: 18px;
+  }
+
+  .service-card p {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .price {
+    font-size: 18px;
+  }
+
+  .duration {
+    font-size: 11px;
   }
 
   .carousel-container {
