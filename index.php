@@ -30,10 +30,10 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
     </header>
 
     <!-- Hero -->
-    <section class="hero">
-        <div class="hero-content">
-            <h2>Experiencia Premium.</h2>
-            <p>Cortes de calidad y servicios profesionales pensados para ti</p>
+    <section class="hero" style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('img/fondo.jpg') center/cover no-repeat !important;">
+        <div class="hero-content" style="background: rgba(0, 0, 0, 0.4); padding: 20px 30px; border-radius: 10px; backdrop-filter: blur(5px); display: inline-block;">
+            <h2 style="color: #d4a574; text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.9); font-size: 3.5em; font-weight: 800; margin: 0;">Experiencia Premium.</h2>
+            <p style="color: #f5f3ed; text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9); font-size: 1.3em; font-weight: 500; margin: 10px 0 0 0;">Cortes de calidad y servicios profesionales pensados para ti</p>
         </div>
     </section>
 
@@ -44,11 +44,11 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
             <button class="carousel-btn carousel-prev" id="prevBtn">❮</button>
             <div class="carousel-wrapper">
                 <div class="carousel" id="carouselItems">
-                    <div class="carousel-item"><img src="img/fade.png" alt="Fade"><h3>Fade Clásico</h3></div>
-                    <div class="carousel-item"><img src="img/undercut.png" alt="Undercut"><h3>Undercut</h3></div>
-                    <div class="carousel-item"><img src="img/pompadour.png" alt="Pompadour"><h3>Pompadour</h3></div>
-                    <div class="carousel-item"><img src="img/mohawk.png" alt="Mohawk"><h3>Mohawk Moderno</h3></div>
-                    <div class="carousel-item"><img src="img/texturizado.png" alt="Texturizado"><h3>Corte Texturizado</h3></div>
+                    <div class="carousel-item"><img src="img/fade.jpg" alt="Fade Clásico"><h3>Fade Clásico</h3></div>
+                    <div class="carousel-item"><img src="img/low taper.jpg" alt="Low Taper"><h3>Low Taper</h3></div>
+                    <div class="carousel-item"><img src="img/undercut.jpg" alt="Undercut"><h3>Undercut</h3></div>
+                    <div class="carousel-item"><img src="img/mohawk.jpg" alt="Mohawk Moderno"><h3>Mohawk Moderno</h3></div>
+                    <div class="carousel-item"><img src="img/texturizado.jpg" alt="Corte Texturizado"><h3>Corte Texturizado</h3></div>
                 </div>
             </div>
             <button class="carousel-btn carousel-next" id="nextBtn">❯</button>
