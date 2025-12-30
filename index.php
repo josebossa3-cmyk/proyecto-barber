@@ -92,9 +92,9 @@ $reserva_ok = isset($_GET['reserva']) && $_GET['reserva'] === 'ok';
                     <label>Barbero</label>
                     <input type="hidden" id="barbero" name="barbero" required />
                     <div class="barbero-buttons">
-                        <button type="button" class="barbero-btn" data-barbero="samuel">Samuel Barroso<br><small>(Barbero y Tatuador)</small></button>
-                        <button type="button" class="barbero-btn" data-barbero="ale">Ale Alegría<br><small>(Barbero)</small></button>
-                        <button type="button" class="barbero-btn" data-barbero="alexis">Alexis<br><small>(Barbero)</small></button>
+                        <button type="button" class="barbero-btn" data-barbero="samuel">barbero1<br><small>(Barbero y Tatuador)</small></button>
+                        <button type="button" class="barbero-btn" data-barbero="ale">barbero2<br><small>(Barbero)</small></button>
+                        <button type="button" class="barbero-btn" data-barbero="alexis">barbero3<br><small>(Barbero)</small></button>
                     </div>
                 </div>
 

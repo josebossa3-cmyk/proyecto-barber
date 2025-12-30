@@ -186,9 +186,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="barbero">Barbero *</label>
                 <select id="barbero" name="barbero" required>
                     <option value="">Selecciona un barbero</option>
-                    <option value="samuel" <?php echo ($_POST['barbero'] ?? '') === 'samuel' ? 'selected' : ''; ?>>Samuel Barroso (Barbero y Tatuador)</option>
-                    <option value="ale" <?php echo ($_POST['barbero'] ?? '') === 'ale' ? 'selected' : ''; ?>>Ale Alegría (Barbero)</option>
-                    <option value="alexis" <?php echo ($_POST['barbero'] ?? '') === 'alexis' ? 'selected' : ''; ?>>Alexis (Barbero)</option>
+                    <option value="samuel" <?php echo ($_POST['barbero'] ?? '') === 'samuel' ? 'selected' : ''; ?>>barbero1</option>
+                    <option value="ale" <?php echo ($_POST['barbero'] ?? '') === 'ale' ? 'selected' : ''; ?>>barbero2</option>
+                    <option value="alexis" <?php echo ($_POST['barbero'] ?? '') === 'alexis' ? 'selected' : ''; ?>>barbero3</option>
                 </select>
             </div>
             
