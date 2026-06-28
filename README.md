@@ -1,52 +1,51 @@
-# 💈 BUNKER Barber Studio - Sistema de Reservas
+# BUNKER Barber Studio
 
-Sistema de gestión de turnos para barbería con panel administrativo completo.
+Sistema de gestión de turnos con frontend HTML/CSS/JS y backend Node.js + Express + PostgreSQL.
 
-## 📁 Estructura del Proyecto
+## Estructura
 
 ```
 /
-├── admin/                      # Panel administrativo
-│   ├── agregar.php            # Agregar nuevo turno
-│   ├── dashboard.php          # Panel principal
-│   ├── editar.php             # Editar turno existente
-│   ├── eliminar.php           # Eliminar turno
-│   └── logout.php             # Cerrar sesión
-├── css/
-│   └── style.css              # Estilos principales
-├── includes/
-│   ├── config.php             # Configuración BD
-│   └── funciones.php          # Funciones auxiliares
-├── js/
-│   └── script.js              # Lógica cliente (reservas, horarios)
-├── index.php                  # Vista cliente principal
-├── login.php                  # Login administrativo
-├── logout.php                 # Logout general
-├── procesar_login.php         # Procesamiento login
-├── procesar_reserva.php       # API: crear reserva
-├── consultar_turnos.php       # API: consultar disponibilidad
-├── limpiar_cache.html         # Utilidad: limpiar localStorage
-├── conexion_base.sql          # Script BD inicial
-└── upgrade_turnos.sql         # Script actualización BD
+├── config/              # Configuración de base de datos
+├── controllers/         # Lógica de turnos y auth
+├── models/              # Modelos Sequelize
+├── routes/              # Rutas API REST
+├── public/              # Frontend estático
+│   ├── index.html       # Página principal (cliente)
+│   ├── login.html       # Login admin
+│   ├── admin/           # Panel administrativo
+│   ├── css/
+│   └── js/
+├── server.js            # Servidor Express
+├── start_server.bat     # Inicio rápido en Windows
+└── .env                 # Variables de entorno (BD, JWT)
 ```
 
-## 🚀 Características Principales
+## Inicio rápido
 
-### Vista Cliente
-- ✅ Selección de servicio (Corte, Corte + Barba, Corte + Color)
-- ✅ Selección de barbero 
-- ✅ Fecha mínima: hoy + 2 días
-- ✅ Horarios disponibles en tiempo real (09:00 - 21:00)
-- ✅ Prevención de reservas duplicadas/solapadas
-- ✅ Validación de teléfono (mínimo 7 dígitos)
-- ✅ Métodos de pago: Efectivo / Transferencia
-- ✅ Sincronización con base de datos MySQL
+1. Instalar dependencias: `npm install`
+2. Configurar `.env` con credenciales de PostgreSQL
+3. Ejecutar `start_server.bat` o `node server.js`
+4. Abrir `http://localhost:3000`
 
-### Panel Administrativo
-- ✅ Login seguro con sesiones PHP
-- ✅ Dashboard con listado de turnos
-- ✅ Agregar turno (misma interfaz que cliente)
-- ✅ Editar turnos existentes
-- ✅ Eliminar turnos
-- ✅ Sincronización completa con vista cliente
+## API
 
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/turnos` | Crear reserva (público) |
+| GET | `/api/turnos/disponibilidad?fecha=&barbero=` | Horarios ocupados |
+| POST | `/api/admin/login` | Login administrador |
+| GET | `/api/turnos` | Listar turnos (requiere JWT) |
+| DELETE | `/api/turnos/:id` | Eliminar turno (requiere JWT) |
+
+## Panel admin
+
+- URL: `http://localhost:3000/login.html`
+- Credenciales por defecto: `admin` / `admin123`
+
+## Características
+
+- Reserva online con selección de servicio, barbero, fecha y horario
+- Validación de solapamiento de turnos
+- Carrusel responsive de estilos
+- Panel admin con filtros y estadísticas
